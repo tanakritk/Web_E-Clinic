@@ -17,7 +17,7 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const { loadingContext } = useLoading(); //
+  const { loadingContext } = useLoading();
   const { alertContext } = useAlert();
   const [dialog, setDialog] = useState({
     message: "",
