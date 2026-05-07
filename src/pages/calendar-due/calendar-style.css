@@ -1,0 +1,198 @@
+/* Custom overrides for react-big-calendar to match aesthetics */
+
+.clinic-calendar {
+  font-family: 'IBM Plex Sans Thai', sans-serif !important;
+}
+
+/* Remove overall borders */
+.clinic-calendar .rbc-month-view {
+  border: none;
+}
+
+.clinic-calendar .rbc-header {
+  border-bottom: 1px solid #f0f0f0;
+  border-left: none;
+  font-weight: 700;
+  padding: 12px 0;
+  color: #a0a0a0;
+  text-transform: none;
+  font-size: 13px;
+}
+
+/* Specific styling for Sunday/Saturday if needed. */
+.clinic-calendar .rbc-header + .rbc-header {
+  border-left: none;
+}
+
+.clinic-calendar .rbc-month-row {
+  border-top: none;
+  border-bottom: 1px solid #f8f8f8;
+}
+
+/* Adjust cell borders */
+.clinic-calendar .rbc-day-bg {
+  border-left: 1px solid #fcfcfc;
+}
+
+.clinic-calendar .rbc-day-bg + .rbc-day-bg {
+  border-left: 1px solid #fcfcfc;
+}
+
+/* Date number styles */
+.clinic-calendar .rbc-date-cell {
+  padding-right: 16px;
+  padding-top: 12px;
+  font-weight: 500;
+  color: #555;
+  text-align: left;
+  padding-left: 16px;
+  font-size: 14px;
+}
+
+.clinic-calendar .rbc-off-range-bg {
+  background: transparent;
+}
+
+.clinic-calendar .rbc-off-range .rbc-button-link {
+  color: #e0e0e0;
+}
+
+.clinic-calendar .rbc-today {
+  background-color: #e8eafc; /* subtle pink highlight for today */
+}
+
+/* Remove event padding so custom events can bleed */
+.clinic-calendar .rbc-event {
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Month view: allow custom event overflow */
+.clinic-calendar .rbc-row-segment .rbc-event-content {
+  overflow: visible;
+}
+
+/* Week/Day view: constrain custom event to fit within time slot */
+.clinic-calendar .rbc-time-view .rbc-event {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+.clinic-calendar .rbc-time-view .rbc-event-content {
+  height: 100%;
+  overflow: hidden;
+}
+
+.clinic-calendar .rbc-time-view .custom-event-pending,
+.clinic-calendar .rbc-time-view .custom-event-success {
+  height: 100%;
+  border-radius: 8px;
+  padding: 4px 8px;
+  margin: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.custom-event-pending {
+  background-color: #FDECF2;
+  color: #E91E63;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin: 4px;
+  font-family: inherit;
+  box-shadow: inset 0 0 0 1px rgba(233, 30, 99, 0.2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.custom-event-pending:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+.custom-event-success {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin: 4px;
+  font-family: inherit;
+  box-shadow: inset 0 0 0 1px rgba(46, 125, 50, 0.2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.custom-event-success:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+.custom-event-highlight {
+  background-color: #E91E63;
+  color: white;
+  padding: 16px 12px;
+  border-radius: 12px;
+  margin: -36px 4px 0 4px; /* Pull it up to cover the date number */
+  height: 120px;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(233, 30, 99, 0.4);
+}
+
+/* Style "Show More" link */
+.clinic-calendar .rbc-show-more {
+  color: #E91E63;
+  font-weight: 700;
+  background-color: #fdf2f8;
+  text-decoration: none;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 10px;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+.clinic-calendar .rbc-show-more:hover {
+  background-color: #fce7f3;
+}
+
+/* Style Popup Overlay */
+.rbc-overlay {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid #f0f0f0;
+  padding: 12px;
+  z-index: 1000;
+}
+
+.rbc-overlay-header {
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+.rbc-overlay .custom-event-pending,
+.rbc-overlay .custom-event-success {
+  margin: 4px 0;
+}
+
+/* Row height is controlled dynamically via calendarHeight in the component */
+
+/* Limit to 2 visible events per day cell; the rest are handled by CustomDateHeader button */
+.clinic-calendar .rbc-row-content .rbc-row:nth-child(n+4) {
+  display: none;
+}
+
+/* Weekend color override - if needed, using a JS localizer is safer,
+   but we can use n-th child if it always starts on Monday */
+.clinic-calendar .rbc-header:nth-child(6),
+.clinic-calendar .rbc-header:nth-child(7) {
+  color: #E91E63;
+}
