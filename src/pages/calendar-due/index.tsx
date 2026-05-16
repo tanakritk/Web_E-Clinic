@@ -163,6 +163,16 @@ const PageCalendarDue = () => {
           item.trn_sale_item?.mas_product?.name ||
           "ไม่ระบุรายการ";
 
+        // Find next schedule
+        const nextSchedule = scheduleQuery?.data?.find(
+          (s: any) =>
+            s.saleItemId === item.saleItemId &&
+            s.sessionNumber === item.sessionNumber + 1,
+        );
+        const nextScheduleDate = nextSchedule
+          ? nextSchedule.scheduleDate
+          : null;
+
         return {
           id: item.id,
           title: `${customerName}\n${itemName}`,
@@ -175,7 +185,11 @@ const PageCalendarDue = () => {
           scheduleTime: item.scheduleTime,
           status: item.status,
           sessionNumber: item.sessionNumber,
-          saleItemId: item.saleItemId,
+          saleItemId: item.trn_sale_item?.id,
+          saleId: item.trn_sale_item?.trn_sale?.id,
+          receiptNo: item.trn_sale_item?.trn_sale?.receiptNo,
+          totalSessions: item.trn_sale_item?.quantity || 1,
+          nextScheduleDate,
         };
       }) || []
     );

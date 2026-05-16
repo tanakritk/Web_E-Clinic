@@ -42,7 +42,7 @@ const GetRoute = () => {
       <Route path="/dashboard" element={<PageDashboard />} />
 
       <Route path="/calendar-due" element={<PageCalendarDue />} />
-      <Route path="/sale-product" element={<PageSaleProduct />} />
+      <Route path="/sale-product/:customerId?" element={<PageSaleProduct />} />
       <Route path="/sale-list" element={<PageSaleList />} />
       <Route path="/bill-detail/:id" element={<PageBillDetail />} />
 

@@ -20,6 +20,15 @@ export interface SearchSaleScheduleModel extends BaseSearchModel {
   };
 }
 
+export interface BillDetailModel {
+  scheduleAll: number;
+  scheduleSuccess: number;
+  scheduleRemaining: number;
+  nextScheduleDate: string;
+  nextScheduleTime: string;
+  courseName: string;
+}
+
 const rootApi = "/sale-schedule";
 const _SaleScheduleApi = () => {
   return {
@@ -43,6 +52,10 @@ const _SaleScheduleApi = () => {
 
     delete: async (id: string) => {
       return await api().delete<unknown, BaseQueryModel>(`${rootApi}/${id}`);
+    },
+
+    getBillDetail: async (saleItemId: number) => {
+      return await api().get(`${rootApi}/bill-detail/${saleItemId}`);
     },
   };
 };

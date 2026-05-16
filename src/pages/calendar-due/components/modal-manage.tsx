@@ -25,6 +25,7 @@ import {
 } from "@/api/controller/trn-sale-schedule";
 import { useLoading } from "@/context/loading-context";
 import { useAlert } from "@/context/alert-context";
+import ModalBill from "./modal-bill";
 
 interface ModalManageProps {
   open: boolean;
@@ -38,6 +39,7 @@ const ModalManage = ({ open, onClose, eventData }: ModalManageProps) => {
   const { setAlertContext } = useAlert();
   const [action, setAction] = useState<string>("Success");
   const [newDate, setNewDate] = useState<Dayjs | null>(null);
+  const [showBillModal, setShowBillModal] = useState(false);
 
   useEffect(() => {
     if (eventData) {
@@ -49,13 +51,17 @@ const ModalManage = ({ open, onClose, eventData }: ModalManageProps) => {
   const updateMutation = useMutation({
     mutationFn: (body: any) =>
       _SaleScheduleApi().update(Number(eventData.id), body),
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: [_SaleScheduleKey().search] });
       setAlertContext({
         message: "บันทึกข้อมูลเรียบร้อย",
         type: "success",
       });
-      onClose();
+      if (action === "Success") {
+        setShowBillModal(true);
+      } else {
+        onClose();
+      }
     },
     onError: (error: any) => {
       setAlertContext({
@@ -94,138 +100,156 @@ const ModalManage = ({ open, onClose, eventData }: ModalManageProps) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle
-        sx={{
-          m: 0,
-          p: 2,
-          fontWeight: "bold",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
+    <>
+      <Dialog
+        open={open && !showBillModal}
+        onClose={onClose}
+        fullWidth
+        maxWidth="xs"
       >
-        จัดการรายการนัดหมาย
-        <IconButton onClick={onClose} size="small">
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            ชื่อลูกค้า
-          </Typography>
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: 600, color: "primary.main" }}
-          >
-            {eventData?.customerName}
-          </Typography>
-          <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
-            รายการ: {eventData?.itemName}
-          </Typography>
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            นัดหมายเดิม: {dayjs(eventData?.start).format("D MMMM YYYY HH:mm")}
-          </Typography>
-        </Box>
-
-        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
-          เลือกดำเนินการ
-        </Typography>
-        <RadioGroup
-          value={action}
-          onChange={(e) => setAction(e.target.value)}
-          sx={{ gap: 1 }}
-        >
-          <Box
-            sx={{
-              border: "1px solid",
-              borderColor: action === "Success" ? "primary.main" : "divider",
-              borderRadius: 2,
-              px: 2,
-              py: 0.5,
-              backgroundColor:
-                action === "Success" ? "primary.50" : "transparent",
-            }}
-          >
-            <FormControlLabel
-              value="Success"
-              control={<Radio size="small" />}
-              label={
-                <Typography variant="body2" fontWeight={500}>
-                  ทำรายการสำเร็จ
-                </Typography>
-              }
-              sx={{ width: "100%", m: 0 }}
-            />
-          </Box>
-          <Box
-            sx={{
-              border: "1px solid",
-              borderColor: action === "Pending" ? "primary.main" : "divider",
-              borderRadius: 2,
-              px: 2,
-              py: 0.5,
-              backgroundColor:
-                action === "Pending" ? "primary.50" : "transparent",
-            }}
-          >
-            <FormControlLabel
-              value="Pending"
-              control={<Radio size="small" />}
-              label={
-                <Typography variant="body2" fontWeight={500}>
-                  เลื่อนวันทำรายการ
-                </Typography>
-              }
-              sx={{ width: "100%", m: 0 }}
-            />
-          </Box>
-        </RadioGroup>
-
-        {action === "Pending" && (
-          <Box sx={{ mt: 3 }}>
-            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="th">
-              <DateTimePicker
-                label="ระบุวันและเวลาใหม่"
-                value={newDate}
-                onChange={(newValue) => setNewDate(newValue)}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: "small",
-                  },
-                }}
-              />
-            </LocalizationProvider>
-          </Box>
-        )}
-      </DialogContent>
-      <DialogActions sx={{ p: 2.5, gap: 1 }}>
-        <Button
-          onClick={onClose}
-          color="inherit"
-          variant="outlined"
-          sx={{ borderRadius: 2, textTransform: "none", px: 3 }}
-        >
-          ยกเลิก
-        </Button>
-        <Button
-          onClick={handleSave}
-          variant="contained"
-          disabled={updateMutation.isPending}
+        <DialogTitle
           sx={{
-            borderRadius: 2,
-            textTransform: "none",
-            px: 4,
-            boxShadow: "none",
-            "&:hover": { boxShadow: "none" },
+            m: 0,
+            p: 2,
+            fontWeight: "bold",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
-          {updateMutation.isPending ? "กำลังบันทึก..." : "บันทึก"}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          จัดการรายการนัดหมาย
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              ชื่อลูกค้า
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, color: "primary.main" }}
+            >
+              {eventData?.customerName}
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
+              รายการ: {eventData?.itemName}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              นัดหมายเดิม: {dayjs(eventData?.start).format("D MMMM YYYY HH:mm")}
+            </Typography>
+          </Box>
+
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold" }}>
+            เลือกดำเนินการ
+          </Typography>
+          <RadioGroup
+            value={action}
+            onChange={(e) => setAction(e.target.value)}
+            sx={{ gap: 1 }}
+          >
+            <Box
+              sx={{
+                border: "1px solid",
+                borderColor: action === "Success" ? "primary.main" : "divider",
+                borderRadius: 2,
+                px: 2,
+                py: 0.5,
+                backgroundColor:
+                  action === "Success" ? "primary.50" : "transparent",
+              }}
+            >
+              <FormControlLabel
+                value="Success"
+                control={<Radio size="small" />}
+                label={
+                  <Typography variant="body2" fontWeight={500}>
+                    ทำรายการสำเร็จ
+                  </Typography>
+                }
+                sx={{ width: "100%", m: 0 }}
+              />
+            </Box>
+            <Box
+              sx={{
+                border: "1px solid",
+                borderColor: action === "Pending" ? "primary.main" : "divider",
+                borderRadius: 2,
+                px: 2,
+                py: 0.5,
+                backgroundColor:
+                  action === "Pending" ? "primary.50" : "transparent",
+              }}
+            >
+              <FormControlLabel
+                value="Pending"
+                control={<Radio size="small" />}
+                label={
+                  <Typography variant="body2" fontWeight={500}>
+                    เลื่อนวันทำรายการ
+                  </Typography>
+                }
+                sx={{ width: "100%", m: 0 }}
+              />
+            </Box>
+          </RadioGroup>
+
+          {action === "Pending" && (
+            <Box sx={{ mt: 3 }}>
+              <LocalizationProvider
+                dateAdapter={AdapterDayjs}
+                adapterLocale="th"
+              >
+                <DateTimePicker
+                  label="ระบุวันและเวลาใหม่"
+                  value={newDate}
+                  onChange={(newValue) => setNewDate(newValue)}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: "small",
+                    },
+                  }}
+                />
+              </LocalizationProvider>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, gap: 1 }}>
+          <Button
+            onClick={onClose}
+            color="inherit"
+            variant="outlined"
+            sx={{ borderRadius: 2, textTransform: "none", px: 3 }}
+          >
+            ยกเลิก
+          </Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            disabled={updateMutation.isPending}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 4,
+              boxShadow: "none",
+              "&:hover": { boxShadow: "none" },
+            }}
+          >
+            {updateMutation.isPending ? "กำลังบันทึก..." : "บันทึก"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <ModalBill
+        open={showBillModal}
+        onClose={() => {
+          setShowBillModal(false);
+          onClose();
+        }}
+        eventData={eventData}
+      />
+    </>
   );
 };
 

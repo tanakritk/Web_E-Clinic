@@ -14,16 +14,18 @@ import { ModalCustomerList } from "./modal-customer-list";
 
 interface CustomerSectionProps {
   onSelect: (customer: MasterCustomerModel | undefined) => void;
+  customer?: MasterCustomerModel | null;
 }
 
-export const CustomerSection = ({ onSelect }: CustomerSectionProps) => {
+export const CustomerSection = ({
+  onSelect,
+  customer,
+}: CustomerSectionProps) => {
   const { setLoadingContext } = useLoading();
   const { setAlertContext } = useAlert();
   const [searchCustomer, setSearchCustomer] = useState("");
   const [customersList, setCustomersList] = useState<MasterCustomerModel[]>([]);
   const [openModal, setOpenModal] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] =
-    useState<MasterCustomerModel | null>(null);
 
   const onSearch = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -122,21 +124,19 @@ export const CustomerSection = ({ onSelect }: CustomerSectionProps) => {
       </form>
 
       {/* Selected Customer Card */}
-      {selectedCustomer ? (
+      {customer ? (
         <div className="flex items-center justify-between p-4 bg-[#F5EEF2] rounded-xl border border-pink-100">
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
               <div className="flex items-center gap-3">
                 <span className="font-bold text-gray-800 text-lg">
-                  คุณ {selectedCustomer.title || ""}{" "}
-                  {selectedCustomer.firstname} {selectedCustomer.surname}
-                  {selectedCustomer.nickname
-                    ? "(" + selectedCustomer.nickname + ")"
-                    : ""}
+                  คุณ {customer.title || ""} {customer.firstname}{" "}
+                  {customer.surname}
+                  {customer.nickname ? "(" + customer.nickname + ")" : ""}
                 </span>
               </div>
               <span className="text-sm text-gray-500 mt-1">
-                {selectedCustomer.phone || "-"}
+                {customer.phone || "-"}
               </span>
             </div>
           </div>
@@ -144,7 +144,6 @@ export const CustomerSection = ({ onSelect }: CustomerSectionProps) => {
             size="small"
             sx={{ color: "#9CA3AF" }}
             onClick={() => {
-              setSelectedCustomer(null);
               return onSelect(undefined);
             }}
           >
@@ -162,7 +161,6 @@ export const CustomerSection = ({ onSelect }: CustomerSectionProps) => {
         onClose={() => setOpenModal(false)}
         customers={customersList}
         onSelect={(customer) => {
-          setSelectedCustomer(customer);
           setOpenModal(false);
           return onSelect(customer);
         }}

@@ -6,18 +6,30 @@ import {
   ISalePayload,
   OrderSummary,
 } from "./components/order-summary";
-import { useState } from "react";
-import { MasterCustomerModel } from "@/api/controller/master-customer";
+import { useEffect, useState } from "react";
+import {
+  _MasterCustomerApi,
+  _MasterCustomerKey,
+  MasterCustomerModel,
+  SearchMasterCustomerModel,
+} from "@/api/controller/master-customer";
 import { useAlert } from "@/context/alert-context";
 import { getLoginStorage } from "@/helpers/set-storage";
 import { _SaleApi, _SaleKey, CreateSaleModel } from "@/api/controller/trn-sale";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { _StockKey } from "@/api/controller/trn-stock";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { CryptoHelper } from "@/helpers/encrypt-decrypt";
+import { useLoading } from "@/context/loading-context";
 
 const PageSaleProduct = (): JSX.Element => {
+  const { customerId } = useParams();
+  const customerIdDeCode = CryptoHelper.decrypt(
+    decodeURIComponent(customerId || ""),
+  );
+
   const { setAlertContext } = useAlert();
+  const { setLoadingContext } = useLoading();
   const profile = getLoginStorage().profile;
   const [customerSelect, setCustomerSelect] = useState<
     MasterCustomerModel | undefined
@@ -25,6 +37,40 @@ const PageSaleProduct = (): JSX.Element => {
   const [itemsOrderList, setItemsOrderList] = useState<IItemsOrder[]>([]);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  // --- Query: ข้อมูลลูกค้า (กรณีส่ง customerId มาทาง URL) ---
+  const { data: customerData, isLoading: isLoadingCustomer } = useQuery({
+    queryKey: [_MasterCustomerKey().search, customerIdDeCode],
+    queryFn: async () => {
+      const payload: SearchMasterCustomerModel = {
+        page: 1,
+        limit: 1,
+        filterOperator: "and",
+        filter: [{ field: "id", operator: "=", value: customerIdDeCode }],
+      };
+      try {
+        const result = await _MasterCustomerApi().search(payload);
+        return result?.data?.[0] ?? null;
+      } catch (error: any) {
+        setAlertContext({
+          message: error?.message || "เกิดข้อผิดพลาดในการดึงข้อมูลลูกค้า",
+          type: "warning",
+        });
+        return null;
+      }
+    },
+    enabled: !!customerIdDeCode,
+  });
+
+  useEffect(() => {
+    if (customerData) {
+      setCustomerSelect(customerData);
+    }
+  }, [customerData]);
+
+  useEffect(() => {
+    setLoadingContext(isLoadingCustomer);
+  }, [isLoadingCustomer, setLoadingContext]);
 
   const onAddItemOrder = (item: IItemsOrder) => {
     setItemsOrderList([...itemsOrderList, item]);
@@ -114,6 +160,7 @@ const PageSaleProduct = (): JSX.Element => {
           <div className="flex-1 flex flex-col w-full min-w-0 bg-transparent">
             {/* Customer Info */}
             <CustomerSection
+              customer={customerSelect}
               onSelect={(customer) => setCustomerSelect(customer)}
             />
 

@@ -13,6 +13,14 @@ export interface MasterCustomerModel {
   surname?: string;
   nickname?: string;
   phone?: string;
+  phone2?: string;
+  birthday?: string;
+  idCardNumber?: string;
+  address?: string;
+  lineId?: string;
+  facebook?: string;
+  source?: string;
+  tag?: string;
 }
 
 export interface SearchMasterCustomerModel extends BaseSearchModel {

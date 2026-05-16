@@ -267,7 +267,7 @@ export const ProductSelection = ({ onAddItem }: ProductSelectionProps) => {
                 activeTab === "Courses" ? "text-primary" : "text-gray-500"
               }`}
             >
-              คอร์สเสริมความงาม
+              คอร์สผิวสวยไร้ฝ้ากระ
             </span>
           </div>
 

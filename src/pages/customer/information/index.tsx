@@ -24,6 +24,7 @@ const PageCustomerInfo = (): JSX.Element => {
   const queryClient = useQueryClient();
 
   const [form, setForm] = useState<PersonalInfoForm>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // --- Query: ข้อมูลลูกค้า ---
   const { data: customerData, isLoading } = useQuery({
@@ -52,11 +53,21 @@ const PageCustomerInfo = (): JSX.Element => {
   // sync customerData -> form เมื่อโหลดเสร็จ
   useEffect(() => {
     if (customerData) {
+      setErrors({});
       setForm({
+        title: customerData.title,
         firstname: customerData.firstname,
         surname: customerData.surname,
         nickname: customerData.nickname,
         phone: customerData.phone,
+        phone2: customerData.phone2,
+        birthday: customerData.birthday,
+        idCardNumber: customerData.idCardNumber,
+        address: customerData.address,
+        lineId: customerData.lineId,
+        facebook: customerData.facebook,
+        source: customerData.source,
+        tag: customerData.tag,
       });
     }
   }, [customerData]);
@@ -87,11 +98,39 @@ const PageCustomerInfo = (): JSX.Element => {
     setLoadingContext(isPending);
   }, [isPending]);
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!form.firstname?.trim()) newErrors.firstname = "กรุณาระบุชื่อ";
+    if (!form.surname?.trim()) newErrors.surname = "กรุณาระบุนามสกุล";
+    if (!form.phone?.trim()) {
+      newErrors.phone = "กรุณาระบุเบอร์ติดต่อ";
+    } else if (!/^0\d{9}$/.test(form.phone.trim())) {
+      newErrors.phone = "รูปแบบเบอร์ติดต่อไม่ถูกต้อง (เช่น 0812345678)";
+    }
+
+    if (!form.phone2?.trim()) {
+      newErrors.phone2 = "กรุณาระบุเบอร์ติดต่อญาติ";
+    } else if (!/^0\d{9}$/.test(form.phone2.trim())) {
+      newErrors.phone2 = "รูปแบบเบอร์ติดต่อญาติไม่ถูกต้อง (เช่น 0812345678)";
+    }
+    
+    if (!form.source?.trim()) newErrors.source = "กรุณาระบุแหล่งที่มา";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = () => {
+    if (validateForm()) {
+      updateCustomer();
+    }
+  };
+
   return (
     <ContentLayout titlePage="ข้อมูลลูกค้า">
       <div className="mt-6 flex flex-col lg:flex-row gap-6 items-stretch">
         <div className="w-full lg:w-[380px] shrink-0">
-          <PersonalInfo data={form} onChange={setForm} />
+          <PersonalInfo data={form} onChange={setForm} errors={errors} setErrors={setErrors} />
         </div>
         <div className="w-full lg:flex-1">
           <TreatmentHistory customerId={idDeCode} />
@@ -103,7 +142,7 @@ const PageCustomerInfo = (): JSX.Element => {
         <Button
           variant="contained"
           disabled={isPending}
-          onClick={() => updateCustomer()}
+          onClick={handleSave}
         >
           บันทึกข้อมูล
         </Button>

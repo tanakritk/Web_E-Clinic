@@ -315,7 +315,7 @@ const PageMasterCourses = (): JSX.Element => {
   return (
     <>
       <ContentLayout
-        titlePage="จัดการข้อมูลคอร์สเสริมความงาม"
+        titlePage="จัดการข้อมูลคอร์สผิวสวยไร้ฝ้ากระ"
         subTitlePage="เพิ่ม เเก้ไข ข้อมูลคอร์สเสริมความงาม"
         headRightLayout={SearchAction()}
       >

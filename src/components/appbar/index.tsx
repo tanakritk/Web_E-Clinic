@@ -33,7 +33,7 @@ const MENU_ITEMS = [
   },
   {
     path: "/master/courses",
-    label: "จัดการข้อมูลคอร์สเสริมความงาม",
+    label: "จัดการข้อมูลคอร์สผิวสวยไร้ฝ้ากระ",
     icon: (
       <FaceRetouchingNaturalIcon fontSize="small" sx={{ color: "#64748b" }} />
     ),

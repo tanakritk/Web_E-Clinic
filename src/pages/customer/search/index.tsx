@@ -129,18 +129,25 @@ const PageCustomerSearch = (): JSX.Element => {
     mutationFn: async ({
       state,
       payload,
-    }: IActionMutate): Promise<"create" | "delete"> => {
+    }: IActionMutate): Promise<{
+      state: "create" | "delete";
+      lastId: string | null;
+    }> => {
+      let lastId = null;
       if (state === "create") {
-        await _MasterCustomerApi().create(payload);
+        const result = await _MasterCustomerApi().create(payload);
+        lastId = result.data?.id;
       }
-      return state;
+      return { state, lastId };
     },
-    onSuccess(state) {
+    onSuccess({ state, lastId }) {
       if (state === "create") {
         setAlertContext({
           type: "success",
           message: "สร้างลูกค้าสำเร็จ",
         });
+        const idEnCode = encodeURIComponent(CryptoHelper.encrypt(lastId || ""));
+        navigate(`/sale-product/${idEnCode}`);
       } else if (state === "delete") {
         setAlertContext({
           type: "success",
@@ -343,7 +350,7 @@ const PageCustomerSearch = (): JSX.Element => {
         onClose={() => setOpenRegisterModal(false)}
         onSubmit={(payload) => {
           onAction({ state: "create", payload });
-          setOpenRegisterModal(false);
+          // setOpenRegisterModal(false);
         }}
       />
     </ContentLayout>
