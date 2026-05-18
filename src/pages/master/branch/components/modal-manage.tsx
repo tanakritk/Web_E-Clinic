@@ -1,6 +1,6 @@
 import DialogCustom from "@/components/custom-element/dialog-custom";
 import AddIcon from "@mui/icons-material/Add";
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, MenuItem } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import UploadFile from "@/components/upload-file";
 import { useState, useEffect } from "react";
@@ -29,6 +29,8 @@ const ModalManage = ({
     phone: "",
     email: "",
     isActive: true,
+    vatType: "ไม่คำนวณภาษี",
+    vatRate: 0,
   });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -61,13 +63,21 @@ const ModalManage = ({
           phone: "",
           email: "",
           isActive: true,
+          vatType: "ไม่คำนวณภาษี",
+          vatRate: 0,
         });
       }
     }
   }, [open, mode, initialData]);
 
   const handleChange = (field: keyof MasterBranchModel, value: any) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const updatedForm = { ...prev, [field]: value };
+      if (field === "vatType" && value === "ไม่คำนวณภาษี") {
+        updatedForm.vatRate = 0;
+      }
+      return updatedForm;
+    });
   };
 
   const validateForm = () => {
@@ -77,6 +87,17 @@ const ModalManage = ({
     if (!form.name?.trim()) newErrors.name = "กรุณาระบุชื่อสาขา";
     if (!form.address?.trim()) newErrors.address = "กรุณาระบุที่อยู่";
     if (!form.phone?.trim()) newErrors.phone = "กรุณาระบุเบอร์ติดต่อ";
+
+    if (!form.vatType) {
+      newErrors.vatType = "กรุณาเลือกรูปแบบภาษี";
+    }
+
+    if (
+      form.vatType !== "ไม่คำนวณภาษี" &&
+      (form.vatRate === undefined || form.vatRate === null || isNaN(form.vatRate))
+    ) {
+      newErrors.vatRate = "กรุณาระบุเปอร์เซ็นต์ภาษี";
+    }
 
     if (!form.email?.trim()) {
       newErrors.email = "กรุณาระบุอีเมล";
@@ -244,6 +265,50 @@ const ModalManage = ({
                 }}
                 error={!!errors.email}
                 helperText={errors.email}
+                autoComplete="off"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <p className="block text-sm font-bold text-gray-700 mb-2 ">
+                การคำนวณภาษี
+              </p>
+              <TextField
+                select
+                fullWidth
+                variant="outlined"
+                value={form.vatType || "ไม่คำนวณภาษี"}
+                onChange={(e) => {
+                  handleChange("vatType", e.target.value);
+                  if (errors.vatType) setErrors({ ...errors, vatType: "" });
+                }}
+                error={!!errors.vatType}
+                helperText={errors.vatType}
+              >
+                <MenuItem value="ภาษีนอก">ภาษีนอก</MenuItem>
+                <MenuItem value="ภาษีใน">ภาษีใน</MenuItem>
+                <MenuItem value="ไม่คำนวณภาษี">ไม่คำนวณภาษี</MenuItem>
+              </TextField>
+            </div>
+            <div className="flex-1">
+              <p className="block text-sm font-bold text-gray-700 mb-2 ">
+                Vat (%)
+              </p>
+              <TextField
+                type="number"
+                placeholder="7"
+                fullWidth
+                variant="outlined"
+                value={form.vatRate ?? ""}
+                onChange={(e) => {
+                  handleChange("vatRate", Number(e.target.value));
+                  if (errors.vatRate) setErrors({ ...errors, vatRate: "" });
+                }}
+                disabled={form.vatType === "ไม่คำนวณภาษี"}
+                error={!!errors.vatRate}
+                helperText={errors.vatRate}
                 autoComplete="off"
               />
             </div>

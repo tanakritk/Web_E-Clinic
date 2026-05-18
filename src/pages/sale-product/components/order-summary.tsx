@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ModalConfirmOrder } from "./modal-confirm-order";
-import { useQuery } from "@tanstack/react-query";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import MoneyIcon from "@mui/icons-material/Money";
@@ -9,11 +8,10 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { Button, TextField } from "@mui/material";
-import _SystemApi from "@/api/controller/system";
-import { BaseSearchModel } from "@/api/interface";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
+import { getLoginStorage } from "@/helpers/set-storage";
 
 dayjs.extend(buddhistEra);
 dayjs.locale("th");
@@ -65,33 +63,32 @@ export const OrderSummary = ({
   const [pendingPayload, setPendingPayload] = useState<ISalePayload | null>(
     null,
   );
+  const profile = getLoginStorage().profile;
+  console.log("profile--> ", profile);
 
-  const { data: systemData } = useQuery({
-    queryKey: ["SystemSearchForVat"],
-    queryFn: async () => {
-      const payload: BaseSearchModel = {
-        limit: 100,
-        page: 1,
-        filterOperator: "and",
-        filter: [],
-      };
-      return await _SystemApi().search(payload);
-    },
-  });
-  const vatSetting = systemData?.data?.find((item: any) => item.key === "vat");
-  const vatPercentage =
-    vatSetting && !isNaN(Number(vatSetting.value))
-      ? Number(vatSetting.value)
-      : 7;
-  const vatRate = vatPercentage / 100;
+  const vatType = profile?.mas_branch?.vatType || "ไม่คำนวณภาษี";
+  const vatPercentage = Number(profile?.mas_branch?.vatRate) || 0;
+
   const subtotal = itemsOrder.reduce((acc, item) => {
     const price = Number(String(item.unitPrice).replace(/,/g, "")) || 0;
     return acc + price * item.quantity;
   }, 0);
 
   const amountAfterDiscount = Math.max(0, subtotal - discount);
-  const tax = amountAfterDiscount * vatRate;
-  const total = amountAfterDiscount + tax;
+
+  let tax = 0;
+  let total = amountAfterDiscount;
+
+  if (vatType === "ภาษีนอก") {
+    tax = amountAfterDiscount * (vatPercentage / 100);
+    total = amountAfterDiscount + tax;
+  } else if (vatType === "ภาษีใน") {
+    tax = amountAfterDiscount - (amountAfterDiscount * 100) / (100 + vatPercentage);
+    total = amountAfterDiscount;
+  } else {
+    tax = 0;
+    total = amountAfterDiscount;
+  }
 
   return (
     <>

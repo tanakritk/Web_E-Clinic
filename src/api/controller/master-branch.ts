@@ -19,6 +19,8 @@ export interface MasterBranchModel {
   qrFileOriginalName?: string;
   qrFileType?: string;
   isActive?: boolean;
+  vatType?: string;
+  vatRate?: number;
   files?: File;
 }
 
