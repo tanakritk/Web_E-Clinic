@@ -7,7 +7,9 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { Button, TextField } from "@mui/material";
+import { Autocomplete, Button, TextField } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import _DropdownApi, { DropdownModel } from "@/api/controller/dropdown";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
@@ -21,6 +23,8 @@ interface IProduct {
   name: string;
   code: string;
   quantity: number;
+  // จำนวนตามสูตรคอร์ส (null = สินค้าที่เพิ่มนอกสูตร)
+  defaultQuantity?: number | null;
 }
 
 export interface IItemsOrder {
@@ -47,6 +51,15 @@ export interface ISalePayload {
 interface OrderSummaryProps {
   itemsOrder: IItemsOrder[];
   onUpdateQuantity?: (index: number, change: number) => void;
+  onUpdateCourseProduct?: (
+    index: number,
+    productId: number,
+    change: number,
+  ) => void;
+  onAddCourseProduct?: (
+    index: number,
+    product: { id: number; name: string },
+  ) => void;
   onClickSave: (payload: ISalePayload) => void;
   onValidate?: () => boolean;
 }
@@ -54,6 +67,8 @@ interface OrderSummaryProps {
 export const OrderSummary = ({
   itemsOrder,
   onUpdateQuantity,
+  onUpdateCourseProduct,
+  onAddCourseProduct,
   onClickSave,
   onValidate,
 }: OrderSummaryProps) => {
@@ -63,6 +78,15 @@ export const OrderSummary = ({
   const [pendingPayload, setPendingPayload] = useState<ISalePayload | null>(
     null,
   );
+  const [addProductIndex, setAddProductIndex] = useState<number | null>(null);
+  const { data: productOptions = [] } = useQuery({
+    queryKey: ["dropdown-product"],
+    queryFn: async () => {
+      const res = await _DropdownApi().product();
+      return (Array.isArray(res?.data) ? res.data : []) as DropdownModel[];
+    },
+    enabled: !!onAddCourseProduct,
+  });
   const profile = getLoginStorage().profile;
   console.log("profile--> ", profile);
 
@@ -181,31 +205,112 @@ export const OrderSummary = ({
                         ))}
                       </div>
                     )}
-                    <span className="text-[10px] font-bold text-gray-800">
-                      รายการที่รวมในคอร์ส:
-                    </span>
-                    {item?.mas_product?.map((prod: IProduct, index: number) => (
-                      <div
-                        key={"orderB" + index}
-                        className="flex justify-between"
-                      >
-                        <div className="flex items-center gap-2">
-                          <CheckCircleIcon
-                            color="primary"
-                            sx={{ fontSize: 14 }}
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-gray-800">
+                        รายการที่รวมในคอร์ส:
+                      </span>
+                      {onAddCourseProduct && (
+                        <span
+                          onClick={() =>
+                            setAddProductIndex(
+                              addProductIndex === index ? null : index,
+                            )
+                          }
+                          className="text-[11px] text-primary font-bold cursor-pointer hover:underline"
+                        >
+                          {addProductIndex === index ? "ปิด" : "+ เพิ่มสินค้า"}
+                        </span>
+                      )}
+                    </div>
+                    {item?.mas_product?.map((prod: IProduct, pIndex: number) => {
+                      const isRemoved = prod.quantity === 0;
+                      const isExtra = prod.defaultQuantity == null;
+                      const isAdjusted =
+                        !isExtra && prod.quantity !== prod.defaultQuantity;
+                      return (
+                        <div
+                          key={"orderB" + pIndex}
+                          className="flex justify-between items-center gap-2"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CheckCircleIcon
+                              color={isRemoved ? "disabled" : "primary"}
+                              sx={{ fontSize: 14 }}
+                            />
+                            <span
+                              className={`text-[11px] font-medium ${
+                                isRemoved
+                                  ? "text-gray-400 line-through"
+                                  : "text-primary"
+                              }`}
+                            >
+                              {prod.name}
+                              {isExtra && (
+                                <span className="ml-1 text-[9px] font-bold bg-blue-50 text-blue-500 border border-blue-200 rounded-full px-1.5 py-0.5 leading-none">
+                                  นอกสูตร
+                                </span>
+                              )}
+                              {isAdjusted && (
+                                <span className="ml-1 text-[9px] font-bold bg-amber-100 text-amber-600 border border-amber-300 rounded-full px-1.5 py-0.5 leading-none">
+                                  สูตร {prod.defaultQuantity}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                          {onUpdateCourseProduct ? (
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <div
+                                onClick={() =>
+                                  onUpdateCourseProduct(index, prod.id, -1)
+                                }
+                                className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100"
+                              >
+                                <RemoveIcon sx={{ fontSize: 12 }} />
+                              </div>
+                              <span className="text-[11px] text-gray-700 font-bold w-10 text-center">
+                                {prod.quantity} ชิ้น
+                              </span>
+                              <div
+                                onClick={() =>
+                                  onUpdateCourseProduct(index, prod.id, 1)
+                                }
+                                className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-100"
+                              >
+                                <AddIcon sx={{ fontSize: 12 }} />
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-gray-400 mt-0.5">
+                              {prod.quantity} ชิ้น
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {addProductIndex === index && (
+                      <Autocomplete
+                        size="small"
+                        options={productOptions}
+                        getOptionLabel={(o) => o.label}
+                        value={null}
+                        onChange={(_, option) => {
+                          if (option && onAddCourseProduct) {
+                            onAddCourseProduct(index, {
+                              id: Number(option.value),
+                              name: option.label,
+                            });
+                            setAddProductIndex(null);
+                          }
+                        }}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            className="bg-white"
+                            placeholder="เลือกสินค้าที่ต้องการเพิ่ม"
                           />
-
-                          <span className="text-[11px] text-primary font-medium">
-                            {prod.name}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-[11px] text-gray-400 mt-0.5">
-                            {prod.quantity} ชิ้น
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                        )}
+                      />
+                    )}
                   </div>
                 </div>
               ) : (

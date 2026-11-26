@@ -89,6 +89,52 @@ const PageSaleProduct = (): JSX.Element => {
     });
   };
 
+  // ปรับจำนวนสินค้าในคอร์ส (ทีละ 1) ราคาคอร์สคงเดิม
+  const onUpdateCourseProduct = (
+    index: number,
+    productId: number,
+    change: number,
+  ) => {
+    setItemsOrderList((prev) => {
+      const newList = [...prev];
+      const products = (newList[index].mas_product || [])
+        .map((p) =>
+          p.id === productId
+            ? { ...p, quantity: Math.max(0, p.quantity + change) }
+            : p,
+        )
+        // สินค้านอกสูตรที่ลดเหลือ 0 → เอาออกจากรายการ
+        .filter((p) => p.quantity > 0 || p.defaultQuantity != null);
+      newList[index] = { ...newList[index], mas_product: products };
+      return newList;
+    });
+  };
+
+  // เพิ่มสินค้านอกสูตรเข้าคอร์ส (มีอยู่แล้ว = +1)
+  const onAddCourseProduct = (
+    index: number,
+    product: { id: number; name: string },
+  ) => {
+    const exists = itemsOrderList[index]?.mas_product?.some(
+      (p) => p.id === product.id,
+    );
+    if (exists) {
+      onUpdateCourseProduct(index, product.id, 1);
+      return;
+    }
+    setItemsOrderList((prev) => {
+      const newList = [...prev];
+      newList[index] = {
+        ...newList[index],
+        mas_product: [
+          ...(newList[index].mas_product || []),
+          { ...product, code: "", quantity: 1, defaultQuantity: null },
+        ],
+      };
+      return newList;
+    });
+  };
+
   const validate = () => {
     if (!customerSelect) {
       setAlertContext({
@@ -124,6 +170,12 @@ const PageSaleProduct = (): JSX.Element => {
         unitPrice: Number(item.unitPrice),
         totalPrice: item.totalPrice || 0,
         schedules: item.schedules || [],
+        ...(item.itemType === "Course" && {
+          products: (item.mas_product || []).map((p) => ({
+            productId: p.id,
+            quantity: p.quantity,
+          })),
+        }),
       })),
       payment: summary.payment,
     };
@@ -173,6 +225,8 @@ const PageSaleProduct = (): JSX.Element => {
             <OrderSummary
               itemsOrder={itemsOrderList}
               onUpdateQuantity={onUpdateQuantity}
+              onUpdateCourseProduct={onUpdateCourseProduct}
+              onAddCourseProduct={onAddCourseProduct}
               onClickSave={onSave}
               onValidate={validate}
             />

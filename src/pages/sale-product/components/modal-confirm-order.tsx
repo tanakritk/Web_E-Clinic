@@ -221,11 +221,18 @@ export const ModalConfirmOrder = ({
                     {item.mas_product.map((prod, pi) => (
                       <div key={pi} className="flex items-center gap-2">
                         <CheckCircleIcon
-                          color="primary"
+                          color={prod.quantity === 0 ? "disabled" : "primary"}
                           sx={{ fontSize: 13 }}
                         />
-                        <span className="text-[11px] text-pink-500 font-medium">
+                        <span
+                          className={`text-[11px] font-medium ${
+                            prod.quantity === 0
+                              ? "text-gray-400 line-through"
+                              : "text-pink-500"
+                          }`}
+                        >
                           {prod.name}
+                          {prod.defaultQuantity == null && " (นอกสูตร)"}
                         </span>
                         <span className="text-[11px] text-gray-400 ml-auto">
                           {prod.quantity} ชิ้น

@@ -6,6 +6,11 @@ import _DropdownApi, { DropdownModel } from "@/api/controller/dropdown";
 import { StockModel } from "@/api/controller/trn-stock";
 import { getLoginStorage } from "@/helpers/set-storage";
 import AutocompleteCustom from "@/components/custom-element/autocomplete-custom";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs, { Dayjs } from "dayjs";
+import "dayjs/locale/th";
 
 interface ModalImportProps {
   open: boolean;
@@ -21,6 +26,7 @@ const ModalImport = ({ open, onClose, onSubmit }: ModalImportProps) => {
     quantity: undefined,
     description: "",
   });
+  const [importDate, setImportDate] = useState<Dayjs | null>(dayjs());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [products, setProducts] = useState<DropdownModel[]>([]);
   const [branches, setBranches] = useState<DropdownModel[]>([]);
@@ -44,6 +50,7 @@ const ModalImport = ({ open, onClose, onSubmit }: ModalImportProps) => {
   useEffect(() => {
     if (open) {
       setErrors({});
+      setImportDate(dayjs());
       setForm({
         productId: undefined,
         branchId: profile?.mas_branch?.id ? profile?.mas_branch?.id : undefined,
@@ -62,6 +69,8 @@ const ModalImport = ({ open, onClose, onSubmit }: ModalImportProps) => {
     const newErrors: Record<string, string> = {};
     if (!form.branchId) newErrors.branchId = "กรุณาเลือกสาขา";
     if (!form.productId) newErrors.productId = "กรุณาเลือกสินค้า";
+    if (!importDate || !importDate.isValid())
+      newErrors.importDate = "กรุณาระบุวันที่และเวลานำเข้า";
     if (!form.quantity || Number(form.quantity) <= 0)
       newErrors.quantity = "กรุณาระบุจำนวน (มากกว่า 0)";
 
@@ -71,7 +80,7 @@ const ModalImport = ({ open, onClose, onSubmit }: ModalImportProps) => {
 
   const handleSave = () => {
     if (validateForm()) {
-      onSubmit(form);
+      onSubmit({ ...form, importDate: importDate?.toISOString() });
     }
   };
 
@@ -131,6 +140,31 @@ const ModalImport = ({ open, onClose, onSubmit }: ModalImportProps) => {
                 <MenuItem value="">ไม่พบข้อมูลสาขา</MenuItem>
               )}
             </TextField>
+          </div>
+
+          <div>
+            <p className="block text-sm font-bold text-gray-700 mb-1">
+              วันที่และเวลานำเข้า <span className="text-red-500">*</span>
+            </p>
+            <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="th">
+              <DateTimePicker
+                value={importDate}
+                onChange={(newValue) => {
+                  setImportDate(newValue);
+                  if (errors.importDate) setErrors({ ...errors, importDate: "" });
+                }}
+                ampm={false}
+                format="DD/MM/YYYY HH:mm"
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: "small",
+                    error: !!errors.importDate,
+                    helperText: errors.importDate,
+                  },
+                }}
+              />
+            </LocalizationProvider>
           </div>
 
           <div>

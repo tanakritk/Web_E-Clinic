@@ -19,6 +19,10 @@ import {
 import ModalImport from "./components/modal-import";
 import ModalUpdate from "./components/modal-update";
 import { getLoginStorage } from "@/helpers/set-storage";
+import dayjs from "dayjs";
+import buddhistEra from "dayjs/plugin/buddhistEra";
+
+dayjs.extend(buddhistEra);
 
 const PageStock = (): JSX.Element => {
   const { setLoadingContext } = useLoading();
@@ -54,7 +58,7 @@ const PageStock = (): JSX.Element => {
     {
       field: "name",
       label: "ชื่อสินค้า",
-      width: "55%",
+      width: "40%",
       render: (row: StockModel) => (
         <div className="flex items-center gap-3 font-['Sarabun',sans-serif]">
           <div className="bg-pink-50 p-1.5 rounded-full flex items-center justify-center shrink-0">
@@ -87,6 +91,19 @@ const PageStock = (): JSX.Element => {
       width: "10%",
       bodyAlign: "center",
       render: (row: StockModel) => row.quantity,
+    },
+    {
+      field: "lastImportDate",
+      label: "นำเข้าล่าสุด",
+      width: "15%",
+      bodyAlign: "center",
+      render: (row: StockModel) => (
+        <span className="font-['Sarabun',sans-serif]">
+          {row.lastImportDate
+            ? dayjs(row.lastImportDate).format("DD/MM/BBBB HH:mm")
+            : "-"}
+        </span>
+      ),
     },
     {
       field: "actions",
@@ -174,6 +191,9 @@ const PageStock = (): JSX.Element => {
       });
       queryClient.invalidateQueries({
         queryKey: [_StockKey().search],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [_StockKey().importHistory],
       });
       setOpenModal(false);
       setOpenUpdateModal(false);

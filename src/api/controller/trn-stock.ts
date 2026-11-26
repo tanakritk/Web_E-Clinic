@@ -17,12 +17,25 @@ export interface StockModel {
   id?: number;
   quantity?: number;
   description?: string;
+  lastImportDate?: string | Date;
   mas_product?: MasterProductModel;
   mas_branch?: MasterBranchModel;
 
   // -------------------------- //
   branchId?: number;
   productId?: number;
+  importDate?: string;
+}
+
+export interface ImportStockModel {
+  id?: number;
+  importType?: "Import" | "Count";
+  importDate?: string | Date;
+  quantity?: number;
+  beforeQuantity?: number;
+  afterQuantity?: number;
+  description?: string;
+  mas_user?: { id?: number; firstname?: string; surname?: string };
 }
 
 const rootApi = "/stock";
@@ -46,6 +59,10 @@ const _StockApi = () => {
       );
     },
 
+    importHistory: async (id: number) => {
+      return await api().get<BaseQueryModel>(`${rootApi}/${id}/import-history`);
+    },
+
     update: async (id: number, body: StockModel) => {
       return await api().put<StockModel, BaseQueryModel>(
         `${rootApi}/${id}`,
@@ -64,6 +81,7 @@ const _StockKey = () => {
     search: "search-stock",
     create: "create-stock",
     update: "update-stock",
+    importHistory: "import-history-stock",
     delete: "delete-stock",
   };
 };

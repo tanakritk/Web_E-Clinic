@@ -182,7 +182,8 @@ export const ProductSelection = ({ onAddItem }: ProductSelectionProps) => {
             id: item.mas_product?.id,
             name: item.mas_product?.name,
             code: item.mas_product?.code,
-            quantity: Number(item.quantity || 0),
+            quantity: Math.round(Number(item.quantity || 0)),
+            defaultQuantity: Math.round(Number(item.quantity || 0)),
           })) || [],
         schedules: schedules,
       };

@@ -2,7 +2,17 @@ import DialogCustom from "@/components/custom-element/dialog-custom";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import { Button, TextField } from "@mui/material";
 import { useState, useEffect } from "react";
-import { StockModel } from "@/api/controller/trn-stock";
+import {
+  _StockApi,
+  _StockKey,
+  ImportStockModel,
+  StockModel,
+} from "@/api/controller/trn-stock";
+import { useQuery } from "@tanstack/react-query";
+import dayjs from "dayjs";
+import buddhistEra from "dayjs/plugin/buddhistEra";
+
+dayjs.extend(buddhistEra);
 
 interface ModalUpdateProps {
   open: boolean;
@@ -20,6 +30,15 @@ const ModalUpdate = ({ open, onClose, onSubmit, initialData }: ModalUpdateProps)
     description: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { data: history, isLoading: isLoadingHistory } = useQuery({
+    queryKey: [_StockKey().importHistory, initialData?.id],
+    queryFn: async () => {
+      const res = await _StockApi().importHistory(initialData?.id as number);
+      return (Array.isArray(res?.data) ? res.data : []) as ImportStockModel[];
+    },
+    enabled: open && !!initialData?.id,
+  });
 
   useEffect(() => {
     if (open && initialData) {
@@ -63,7 +82,7 @@ const ModalUpdate = ({ open, onClose, onSubmit, initialData }: ModalUpdateProps)
       status={open}
       returnOnClose={handleClose}
       hideHeader={true}
-      size="sm"
+      size="md"
     >
       <div className="p-2 sm:p-4 font-['Sarabun',sans-serif]">
         <div className="flex justify-between items-start mb-6">
@@ -138,6 +157,78 @@ const ModalUpdate = ({ open, onClose, onSubmit, initialData }: ModalUpdateProps)
               value={form.description || ""}
               onChange={(e) => handleChange("description", e.target.value)}
             />
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <p className="block text-sm font-bold text-gray-700 mb-2">
+            ประวัติการนำเข้าสินค้า
+          </p>
+          <div className="max-h-64 overflow-auto rounded-xl border border-gray-100">
+            <table className="w-full text-sm border-collapse">
+              <thead className="sticky top-0 bg-[#F5F2F5] text-[#7A7A7A]">
+                <tr>
+                  <th className="py-2 px-3 font-semibold text-center">วันที่</th>
+                  <th className="py-2 px-3 font-semibold text-center">ประเภท</th>
+                  <th className="py-2 px-3 font-semibold text-center">จำนวน</th>
+                  <th className="py-2 px-3 font-semibold text-center">ก่อน → หลัง</th>
+                  <th className="py-2 px-3 font-semibold text-left">ผู้ทำรายการ</th>
+                  <th className="py-2 px-3 font-semibold text-left">รายละเอียด</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoadingHistory ? (
+                  <tr>
+                    <td colSpan={6} className="py-4 text-center text-gray-400">
+                      กำลังโหลด...
+                    </td>
+                  </tr>
+                ) : !history || history.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-4 text-center text-gray-400">
+                      ไม่พบประวัติการนำเข้า
+                    </td>
+                  </tr>
+                ) : (
+                  history.map((h) => (
+                    <tr key={h.id} className="border-t border-gray-100">
+                      <td className="py-2 px-3 text-center whitespace-nowrap">
+                        {dayjs(h.importDate).format("DD/MM/BBBB HH:mm")}
+                      </td>
+                      <td className="py-2 px-3 text-center">
+                        {h.importType === "Count" ? (
+                          <span className="bg-amber-50 text-amber-600 text-xs font-bold px-2 py-1 rounded-lg whitespace-nowrap">
+                            นับสต๊อก
+                          </span>
+                        ) : (
+                          <span className="bg-green-50 text-green-600 text-xs font-bold px-2 py-1 rounded-lg whitespace-nowrap">
+                            นำเข้า
+                          </span>
+                        )}
+                      </td>
+                      <td
+                        className={`py-2 px-3 text-center font-bold ${
+                          Number(h.quantity) < 0 ? "text-red-500" : "text-green-600"
+                        }`}
+                      >
+                        {Number(h.quantity) > 0 ? `+${h.quantity}` : h.quantity}
+                      </td>
+                      <td className="py-2 px-3 text-center whitespace-nowrap">
+                        {h.beforeQuantity} → {h.afterQuantity}
+                      </td>
+                      <td className="py-2 px-3 whitespace-nowrap">
+                        {h.mas_user
+                          ? `${h.mas_user.firstname || ""} ${h.mas_user.surname || ""}`
+                          : "-"}
+                      </td>
+                      <td className="py-2 px-3 text-gray-500">
+                        {h.description || "-"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 

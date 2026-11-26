@@ -20,6 +20,7 @@ export interface SaleItemModel {
   unitPrice: number;
   totalPrice: number;
   schedules?: SaleScheduleModel[];
+  products?: { productId: number; quantity: number }[];
 }
 
 export interface CreateSaleModel {

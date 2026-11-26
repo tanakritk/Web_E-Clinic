@@ -35,6 +35,7 @@ const PageBillDetail = (): JSX.Element => {
           //   "trn_sale_item",
           "trn_sale_item.mas_product",
           "trn_sale_item.mas_courses",
+          "trn_sale_item.trn_sale_item_product.mas_product",
         ],
         filter: [{ field: "id", operator: "=", value: Number(decryptedId) }],
       };
@@ -206,6 +207,27 @@ const PageBillDetail = (): JSX.Element => {
                         <td className="py-3">
                           {name || "-"}{" "}
                           {item.itemType === "Course" ? "(คอร์ส)" : ""}
+                          {item.itemType === "Course" &&
+                            item.trn_sale_item_product?.length > 0 && (
+                              <ul className="mt-1 text-xs text-gray-500 list-disc pl-5">
+                                {item.trn_sale_item_product.map(
+                                  (ip: any, ipIndex: number) => (
+                                    <li
+                                      key={ipIndex}
+                                      className={
+                                        Number(ip.quantity) === 0
+                                          ? "line-through text-gray-400"
+                                          : ""
+                                      }
+                                    >
+                                      {ip.mas_product?.name} x {ip.quantity}
+                                      {ip.defaultQuantity == null &&
+                                        " (นอกสูตร)"}
+                                    </li>
+                                  ),
+                                )}
+                              </ul>
+                            )}
                         </td>
                         <td className="py-3 text-right">{item.quantity}</td>
                         <td className="py-3 text-right">
